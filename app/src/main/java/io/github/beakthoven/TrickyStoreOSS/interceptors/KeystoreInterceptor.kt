@@ -191,8 +191,15 @@ object KeystoreInterceptor : BaseKeystoreInterceptor() {
                             val kma = KeymasterArguments()
                             if (check == 1) {
                                 kma.readFromParcel(data)
-                                val attestationChallenge =
-                                    kma.getBytes(KeymasterDefs.KM_TAG_ATTESTATION_CHALLENGE, ByteArray(0))
+        val attestationChallenge =
+            kma.getBytes(KeymasterDefs.KM_TAG_ATTESTATION_CHALLENGE, ByteArray(0))
+        // DUCK DETECTOR FIX: Reject oversized challenge
+        if (attestationChallenge.size > 32) {
+            Logger.w("Rejected oversized challenge: ${attestationChallenge.size} bytes (max 32)")
+            val ksr = createSuccessKeystoreResponse()
+            callback.onFinished(ksr, KeymasterCertificateChain(emptyList()))
+            return createSuccessReply()
+        }
 
                                 val ksr = createSuccessKeystoreResponse()
 
